@@ -36,7 +36,9 @@ pico_sdk_init()
 # Add executable. Default name is the project name, version 0.1
 
 add_executable( synth_audio
-  main.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/app/main.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/hal/microphone_dma.c
+  
 )
 
 pico_set_program_name(synth_audio "synth_audio")

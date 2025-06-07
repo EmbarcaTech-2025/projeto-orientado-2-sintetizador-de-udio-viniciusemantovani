@@ -1,0 +1,7 @@
+mkdir build
+cd build
+cmake ../CMakeLists.txt
+make
+sudo mv synth_audio.uf2 /media/pininsu/RPI-RP21
+cd ..
+sudo rm -rf build
