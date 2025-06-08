@@ -7,10 +7,12 @@
 #include "hardware/pwm.h" // Biblioteca do PWM
 
 #include "include/microphone_dma.h" // Biblioteca microfone
+#include "include/buzzer_pwm1.h" // Biblioteca buzzer
 
 int main() {
   stdio_init_all();
   
+  pwm_init_audio(BUZZER_PIN);  // inicializa PWM para áudio
   sleep_ms(5000);
 
   adc_gpio_init(MIC_PIN);
@@ -39,6 +41,11 @@ int main() {
   
   channel_config_set_dreq(&dma_cfg, DREQ_ADC); // Usamos a requisição de dados do ADC
 
-  while(true)   sample_mic_print();
+  while(true){
+    sample_mic_print();
+    play_audio_buffer(BUZZER_PIN, adc_buffer, SAMPLES); // Toca o áudio pelo PWM
+
+  }
+
   return 0;
 }

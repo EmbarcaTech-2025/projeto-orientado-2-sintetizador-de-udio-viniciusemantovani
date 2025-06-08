@@ -14,10 +14,9 @@
 #define MIC_PIN (26 + MIC_CHANNEL)
 
 // Parâmetros e macros do ADC.
-#define ADC_CLOCK_DIV 96.f
-#define SAMPLES 200 // Número de amostras que serão feitas do ADC.
+#define ADC_CLOCK_DIV 4800.f
+#define SAMPLES 30000 // Número de amostras que serão feitas do ADC. (3s para clock div 4800)
 #define ADC_ADJUST(x) (x * 3.3f / (1 << 12u) - 1.65f) // Ajuste do valor do ADC para Volts.
-#define ADC_MAX 3.3f
 #define ADC_STEP (3.3f/5.f) // Intervalos de volume do microfone.
 
 #define abs(x) ((x < 0) ? (-x) : (x))
@@ -32,7 +31,7 @@ extern uint16_t adc_buffer[SAMPLES];
 /**
  * @brief Realiza as leituras do ADC e armazena os valores no buffer.
  */
-void sample_mic_print();
+void sample_mic_print();    
 
 /**
  * @brief Calcula a potência média das leituras do ADC. (Valor RMS)
