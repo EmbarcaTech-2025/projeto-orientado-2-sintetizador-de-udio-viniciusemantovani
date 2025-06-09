@@ -5,17 +5,30 @@
 #include "hardware/gpio.h" // Biblioteca de GPIOs
 #include "hardware/adc.h" // Biblioteca do ADC
 #include "hardware/pwm.h" // Biblioteca do PWM
+#include <hardware/i2c.h>
 
 #include "include/microphone_dma.h" // Biblioteca microfone
 #include "include/buzzer_pwm1.h" // Biblioteca buzzer
 #include "include/led_rgb.h" // Biblioteca led
+#include "include/ssd1306.h" // Biblioteca led
 
 // Definição dos pinos dos botões:
 #define BUTTON_A 5
 #define BUTTON_B 6
 
+// Definição dos pinos para I2C
+#define I2C_PORT i2c1
+#define I2C_SDA 14
+#define I2C_SCL 15
+
+// Definições de blocos de audio em uma gravação
+#define BLOCK_SIZE 234
+#define NUM_BLOCKS (SAMPLES / BLOCK_SIZE)
+
 volatile bool rec = false; // Flag para determinar se deve gravar;
 volatile bool play = false; // Flag para determinar se deve reproduzir;
+
+ssd1306_t disp; // Instância do display.
 
 /**
  * @brief Handler de interrupções para os botões.
@@ -104,6 +117,36 @@ void init_led(){
     gpio_set_dir(BLUE_PIN, GPIO_OUT);
 }
 
+void init_display(){
+  // I2C Initialisation. Using it at 1Mhz.
+  i2c_init(I2C_PORT, 1000*1000);
+  
+  gpio_set_function(I2C_SDA, GPIO_FUNC_I2C);
+  gpio_set_function(I2C_SCL, GPIO_FUNC_I2C);
+  gpio_pull_up(I2C_SDA);
+  gpio_pull_up(I2C_SCL);
+
+  disp.external_vcc=false;
+  ssd1306_init(&disp, 128, 64, 0x3C, i2c1);
+  ssd1306_clear(&disp);
+  ssd1306_show(&disp);
+}
+
+void show_audio_display(ssd1306_t *p){
+  static uint8_t audio_sample = 0; // Conta número de gravações.
+  uint32_t avg_value = 0;
+
+  if (audio_sample >= NUM_BLOCKS) return;
+
+  for(int i = audio_sample*BLOCK_SIZE; i < BLOCK_SIZE*(1+audio_sample); i++){
+    avg_value = avg_value+adc_buffer[i];
+    printf("%d ", adc_buffer[i]);
+  }
+  avg_value = avg_value/BLOCK_SIZE;
+  ssd1306_draw_square(p, audio_sample*3, 64-avg_value*64/4096, 3, avg_value*64/4096);
+  audio_sample++;
+}
+
 int main() {
 
   stdio_init_all();
@@ -111,8 +154,8 @@ int main() {
   init_adc_dma();
   init_buttons();
   init_led();
-
-  pwm_init_audio(BUZZER_PIN);  // inicializa PWM para áudio
+  init_display();
+  pwm_init_audio(BUZZER_PIN);
 
   while(true){
 
@@ -120,6 +163,8 @@ int main() {
       set_led_color(1);
       sample_mic_print();
       rec = !rec;
+      show_audio_display(&disp);
+      ssd1306_show(&disp);
       set_led_color(2);
     } else if(play){
       set_led_color(0);

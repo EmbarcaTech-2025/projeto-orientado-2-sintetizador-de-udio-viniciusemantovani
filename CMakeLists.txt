@@ -40,6 +40,7 @@ add_executable( synth_audio
   ${CMAKE_CURRENT_LIST_DIR}/src/hal/microphone_dma.c
   ${CMAKE_CURRENT_LIST_DIR}/src/hal/buzzer_pwm1.c
   ${CMAKE_CURRENT_LIST_DIR}/src/hal/led_rgb.c  
+  ${CMAKE_CURRENT_LIST_DIR}/src/hal/ssd1306.c 
   
 )
 
@@ -67,6 +68,8 @@ target_link_libraries(synth_audio
         hardware_adc
         hardware_dma
         hardware_pwm
+        hardware_i2c
+
 )
 
 pico_add_extra_outputs(synth_audio)
