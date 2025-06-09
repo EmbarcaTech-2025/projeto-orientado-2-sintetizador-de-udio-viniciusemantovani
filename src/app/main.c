@@ -9,11 +9,61 @@
 #include "include/microphone_dma.h" // Biblioteca microfone
 #include "include/buzzer_pwm1.h" // Biblioteca buzzer
 
-int main() {
-  stdio_init_all();
+// Definição dos pinos dos botões:
+#define BUTTON_A 5
+#define BUTTON_B 6
+
+volatile bool rec = false; // Flag para determinar se deve gravar;
+volatile bool play = false; // Flag para determinar se deve reproduzir;
+
+/**
+ * @brief Handler de interrupções para os botões.
+ * @param gpio indica o número do gpio que gera a interrupção
+ * @param event_mask indica o número referente ao evento que gera a interrupção
+ */
+void ButtonHandler(uint gpio, uint32_t event_mask){
+  static absolute_time_t deb_time_B = 0; // Contador para debounce do botão B
+  static absolute_time_t deb_time_A = 0; // Contador para debounce do botão A
+
+  if(gpio == BUTTON_B){ // Para o botão B, soma um ao contador caso esteja contando e atualiza o display.
+
+    if(event_mask == GPIO_IRQ_EDGE_FALL && absolute_time_diff_us(deb_time_B, get_absolute_time()) > 800){
+      play = true;
+    } else if(event_mask = GPIO_IRQ_EDGE_RISE && absolute_time_diff_us(deb_time_B, get_absolute_time()) > 800){
+      deb_time_B = get_absolute_time();
+    }
+
+  }
+
+  else if (gpio == BUTTON_A){ // Para o botão A, atualiza o contador de segundos, reiniciando a contagem e atualizando o display para o início.
+    if(event_mask == GPIO_IRQ_EDGE_FALL && absolute_time_diff_us(deb_time_A, get_absolute_time()) > 800){
+      rec = true;
+    } else if(event_mask == GPIO_IRQ_EDGE_RISE && absolute_time_diff_us(deb_time_A, get_absolute_time()) > 800){
+      deb_time_A = get_absolute_time();
+    }
+  }
+
+}
+
+void init_buttons(){
+
+  // Inicializa botão A com pull_up:
+  gpio_init(BUTTON_A);
+  gpio_set_dir(BUTTON_A, GPIO_IN);
+  gpio_pull_up(BUTTON_A);
+
+  // Inicializa botão B com pull_up:
+  gpio_init(BUTTON_B);
+  gpio_set_dir(BUTTON_B, GPIO_IN);
+  gpio_pull_up(BUTTON_B);
+
+  // Preparando interrupções para os botões:
+  gpio_set_irq_enabled_with_callback(BUTTON_B, GPIO_IRQ_EDGE_FALL|GPIO_IRQ_EDGE_RISE, 1, &ButtonHandler);
+  gpio_set_irq_enabled_with_callback(BUTTON_A, GPIO_IRQ_EDGE_FALL|GPIO_IRQ_EDGE_RISE, 1, &ButtonHandler);
   
-  pwm_init_audio(BUZZER_PIN);  // inicializa PWM para áudio
-  sleep_ms(5000);
+}
+
+void init_adc_dma(){
 
   adc_gpio_init(MIC_PIN);
   adc_init();
@@ -41,10 +91,26 @@ int main() {
   
   channel_config_set_dreq(&dma_cfg, DREQ_ADC); // Usamos a requisição de dados do ADC
 
-  while(true){
-    sample_mic_print();
-    play_audio_buffer(BUZZER_PIN, adc_buffer, SAMPLES); // Toca o áudio pelo PWM
+}
 
+int main() {
+
+  stdio_init_all();
+  
+  init_adc_dma();
+  init_buttons();
+
+  pwm_init_audio(BUZZER_PIN);  // inicializa PWM para áudio
+
+  while(true){
+
+    if(rec){
+      sample_mic_print();
+      rec = !rec;
+    } else if(play){
+      play_audio_buffer(BUZZER_PIN, adc_buffer, SAMPLES); // Toca o áudio pelo PWM
+      play = !play;
+    }
   }
 
   return 0;

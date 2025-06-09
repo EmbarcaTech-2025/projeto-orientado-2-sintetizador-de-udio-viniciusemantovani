@@ -1,7 +1,21 @@
+#!/bin/bash
+
+# Cria diretório build e compila o projeto
 mkdir build
 cd build
 cmake ../CMakeLists.txt
 make
-sudo mv synth_audio.uf2 /media/pininsu/RPI-RP21
+
+# Encontra automaticamente o caminho de montagem da Raspberry Pi Pico (RPI-RP*)
+mount_point=$(find /media/pininsu -maxdepth 1 -type d -name "RPI-RP*" | head -n 1)
+
+if [ -d "$mount_point" ]; then
+    echo "Dispositivo encontrado em $mount_point"
+    sudo mv synth_audio.uf2 "$mount_point"
+else
+    echo "Dispositivo RPI-RP* não encontrado"
+fi
+
+# Limpa build
 cd ..
 sudo rm -rf build

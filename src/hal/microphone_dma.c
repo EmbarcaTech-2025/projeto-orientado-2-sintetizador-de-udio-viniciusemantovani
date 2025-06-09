@@ -33,8 +33,8 @@ void sample_mic_print() {
   // Acabou a leitura, desliga o ADC de novo.
   adc_run(false);
 
-  for(int i = 0; i < SAMPLES; i++)
-  printf("%d ", adc_buffer[i]);
+  // for(int i = 0; i < SAMPLES; i++)
+  // printf("%d ", adc_buffer[i]);
 }
 
 float mic_power() {
