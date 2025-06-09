@@ -8,6 +8,7 @@
 
 #include "include/microphone_dma.h" // Biblioteca microfone
 #include "include/buzzer_pwm1.h" // Biblioteca buzzer
+#include "include/led_rgb.h" // Biblioteca led
 
 // Definição dos pinos dos botões:
 #define BUTTON_A 5
@@ -93,23 +94,38 @@ void init_adc_dma(){
 
 }
 
+void init_led(){
+    gpio_init(RED_PIN);
+    gpio_init(GREEN_PIN);
+    gpio_init(BLUE_PIN);
+
+    gpio_set_dir(RED_PIN, GPIO_OUT);
+    gpio_set_dir(GREEN_PIN, GPIO_OUT);
+    gpio_set_dir(BLUE_PIN, GPIO_OUT);
+}
+
 int main() {
 
   stdio_init_all();
   
   init_adc_dma();
   init_buttons();
+  init_led();
 
   pwm_init_audio(BUZZER_PIN);  // inicializa PWM para áudio
 
   while(true){
 
     if(rec){
+      set_led_color(1);
       sample_mic_print();
       rec = !rec;
+      set_led_color(2);
     } else if(play){
+      set_led_color(0);
       play_audio_buffer(BUZZER_PIN, adc_buffer, SAMPLES); // Toca o áudio pelo PWM
       play = !play;
+      set_led_color(2);
     }
   }
 

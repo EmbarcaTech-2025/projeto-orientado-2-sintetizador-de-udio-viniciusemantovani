@@ -39,6 +39,7 @@ add_executable( synth_audio
   ${CMAKE_CURRENT_LIST_DIR}/src/app/main.c
   ${CMAKE_CURRENT_LIST_DIR}/src/hal/microphone_dma.c
   ${CMAKE_CURRENT_LIST_DIR}/src/hal/buzzer_pwm1.c
+  ${CMAKE_CURRENT_LIST_DIR}/src/hal/led_rgb.c  
   
 )
 
